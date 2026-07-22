@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeBuddy — Never Walk Alone | AI-Powered Safety Companion</title>
+  
+  <!-- SEO & Meta -->
+  <meta name="description" content="SafeBuddy is an AI-powered luxury safety companion platform. Book verified physical safety escorts instantly. Never walk alone.">
+  
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Ambient Light Orbs -->
+  <div class="bg-ambient">
+    <div class="ambient-orb ambient-orb-1"></div>
+    <div class="ambient-orb ambient-orb-2"></div>
+    <div class="ambient-orb ambient-orb-3"></div>
+  </div>
+
+  <!-- Animated Particle Canvas Background -->
+  <canvas id="particlesCanvas"></canvas>
+
+  <!-- Main App Shell -->
+  <div id="appShell">
+
+    <!-- Top Navigation Header -->
+    <header class="top-navbar">
+      <div class="brand-logo" onclick="switchView('viewSplash')">
+        <div class="brand-shield-icon" style="background: none; overflow: hidden; padding: 0;">
+          <img src="assets/safebuddy_logo.jpg" alt="SafeBuddy Logo" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <span>Safe<span class="gradient-text">Buddy</span></span>
+      </div>
+
+      <!-- Center Nav Tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-tab-btn active" data-view="viewHome" onclick="switchView('viewHome')">
+          <i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> Home Map
+        </button>
+        <button class="nav-tab-btn" data-view="viewLiveTracking" onclick="switchView('viewLiveTracking')">
+          <i data-lucide="navigation" style="width: 16px; height: 16px;"></i> Live Trip
+        </button>
+        <button class="nav-tab-btn" data-view="viewAISafety" onclick="switchView('viewAISafety')">
+          <i data-lucide="brain-circuit" style="width: 16px; height: 16px;"></i> AI Safety Center
+        </button>
+        <button class="nav-tab-btn" data-view="viewEmergency" onclick="switchView('viewEmergency')">
+          <i data-lucide="siren" style="width: 16px; height: 16px; color: var(--rose-emergency);"></i> SOS Emergency
+        </button>
+      </nav>
+
+      <!-- Right Action & Role Switcher -->
+      <div class="user-status-widget">
+        <div class="role-switcher">
+          <button class="role-btn active" id="btnRoleUser" onclick="setRole('user')">User</button>
+          <button class="role-btn" id="btnRoleCompanion" onclick="setRole('companion')">Companion</button>
+          <button class="role-btn" id="btnRoleAdmin" onclick="setRole('admin')">Admin</button>
+        </div>
+
+        <button class="sos-header-btn" onclick="switchView('viewEmergency')">
+          <i data-lucide="zap" style="width: 16px; height: 16px;"></i> SOS
+        </button>
+
+        <button class="btn-secondary" style="padding: 0.5rem 0.9rem; border-radius: 12px; font-size: 0.85rem;" onclick="openArchModal()">
+          <i data-lucide="cpu" style="width: 16px; height: 16px;"></i> Architecture
+        </button>
+      </div>
+    </header>
+
+    <!-- App Views Container -->
+    <main class="view-wrapper">
+
+      <!-- ===================================================================
+           VIEW 1: SPLASH SCREEN
+           =================================================================== -->
+      <section id="viewSplash" class="app-view active">
+        <div class="splash-hero-container">
+          <div class="splash-logo-3d">
+            <div class="splash-logo-glow"></div>
+            <img src="assets/safebuddy_logo.jpg" alt="SafeBuddy Official Logo" style="width: 130px; height: 130px; border-radius: 32px; object-fit: cover; z-index: 2; position: relative; border: 2px solid var(--border-glass-glow); box-shadow: var(--shadow-glow-purple);">
+          </div>
+
+          <h1 class="splash-title">Safe<span class="gradient-text">Buddy</span></h1>
+          <div class="splash-tagline">"Never Walk Alone."</div>
+          
+          <p class="splash-description">
+            The world’s first AI-powered personal safety companion network. Instantly book background-verified companions, police-cleared escorts, and real-time safe routing.
+          </p>
+
+          <div class="splash-cta-group">
+            <button class="btn-primary" onclick="switchView('viewAuth')">
+              Get Started <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+            </button>
+            <button class="btn-secondary" onclick="switchView('viewHome')">
+              Explore Live Map <i data-lucide="map" style="width: 18px; height: 18px;"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 2: AUTHENTICATION
+           =================================================================== -->
+      <section id="viewAuth" class="app-view">
+        <div class="auth-container glass-card">
+          <div class="auth-header">
+            <div style="display: flex; justify-content: center; margin-bottom: 1rem;">
+              <img src="assets/safebuddy_logo.jpg" alt="Logo" style="width: 54px; height: 54px; border-radius: 16px; object-fit: cover; border: 1px solid var(--border-glass-glow);">
+            </div>
+            <h2>Biometric <span class="gradient-text">Authentication</span></h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Secure access with Military-Grade Encryption</p>
+          </div>
+
+          <div class="auth-tab-buttons">
+            <button class="auth-tab-btn active" id="tabOtp" onclick="setAuthTab('otp')">OTP / Phone</button>
+            <button class="auth-tab-btn" id="tabGoogle" onclick="setAuthTab('google')">1-Tap Google</button>
+          </div>
+
+          <!-- OTP Form -->
+          <div id="formOtpGroup">
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="tel" class="form-input" id="authPhone" value="+1 (555) 382-9014" placeholder="+1 (555) 000-0000">
+            </div>
+
+            <div class="otp-box-group">
+              <input type="text" class="form-input otp-box" maxlength="1" value="8">
+              <input type="text" class="form-input otp-box" maxlength="1" value="5">
+              <input type="text" class="form-input otp-box" maxlength="1" value="2">
+              <input type="text" class="form-input otp-box" maxlength="1" value="9">
+            </div>
+
+            <button class="btn-primary" style="width: 100%; margin-top: 1rem;" onclick="completeAuth()">
+              Verify & Enter SafeBuddy
+            </button>
+          </div>
+
+          <!-- Biometric Quick Auth Triggers -->
+          <div class="biometric-triggers">
+            <div class="bio-card-btn" onclick="triggerFaceIDScan()">
+              <div class="bio-icon">
+                <i data-lucide="scan-face" style="color: var(--cyan-accent);"></i>
+              </div>
+              <span style="font-size: 0.85rem; font-weight: 600;">Face Verification</span>
+            </div>
+
+            <div class="bio-card-btn" onclick="triggerFingerprintScan()">
+              <div class="bio-icon">
+                <i data-lucide="fingerprint" style="color: var(--primary-violet);"></i>
+              </div>
+              <span style="font-size: 0.85rem; font-weight: 600;">Fingerprint Auth</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 3: HOME SCREEN
+           =================================================================== -->
+      <section id="viewHome" class="app-view">
+        
+        <!-- Greeting Header -->
+        <div class="greeting-banner">
+          <div class="user-avatar-badge">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" class="avatar-img-circle" alt="User">
+            <div>
+              <h3>Welcome back, <span class="gradient-text">Elena Rostova</span></h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">San Francisco, CA • High Safety Area</p>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <div class="safety-score-pill">
+              <i data-lucide="shield-check" style="width: 16px; height: 16px;"></i> AI Safety Index: 98/100
+            </div>
+            <button class="btn-primary" onclick="startBookingFlow('Walking Companion')">
+              <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i> Book Companion
+            </button>
+          </div>
+        </div>
+
+        <div class="home-grid-layout">
+          <!-- Left: Interactive Map -->
+          <div class="glass-card map-card-wrapper">
+            <div class="map-floating-overlay">
+              <div class="map-chip active" id="chipCompanions" onclick="toggleMapLayer('companions')">
+                <i data-lucide="users" style="width: 14px; height: 14px;"></i> Companions (14)
+              </div>
+              <div class="map-chip" id="chipSafeHavens" onclick="toggleMapLayer('havens')">
+                <i data-lucide="building-2" style="width: 14px; height: 14px;"></i> Police & Hospitals
+              </div>
+              <div class="map-chip" id="chipHeatmap" onclick="toggleMapLayer('heatmap')">
+                <i data-lucide="flame" style="width: 14px; height: 14px; color: var(--amber-accent);"></i> Safety Heatmap
+              </div>
+            </div>
+
+            <div id="homeMap"></div>
+          </div>
+
+          <!-- Right Sidebar: Nearby Verified Companions -->
+          <div class="companions-sidebar">
+            <div class="section-title-row">
+              <h4>Nearby Companions</h4>
+              <span style="font-size: 0.8rem; color: var(--cyan-accent); font-weight: 600;">Available Now</span>
+            </div>
+
+            <!-- Companion Mini Cards with Formal Security Photos -->
+            <div class="companion-mini-card" onclick="openCompanionProfile('Sarah Jenkins', 'assets/female_escort.jpg')">
+              <div class="companion-avatar-wrapper">
+                <img src="assets/female_escort.jpg" class="companion-avatar-img" alt="Sarah Jenkins">
+                <div class="verified-badge-mini"><i data-lucide="check" style="width: 12px; height: 12px;"></i></div>
+              </div>
+              <div class="companion-info-mini">
+                <h4>Sarah Jenkins</h4>
+                <div class="companion-meta-row">
+                  <span class="rating-star"><i data-lucide="star" style="width: 12px; height: 12px; fill: #FBBF24;"></i> 4.9</span>
+                  <span>• Police Cleared</span>
+                  <span>• 0.3 miles</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--primary-violet); font-weight: 600; margin-top: 0.2rem;">
+                  Walking & Night Escort Specialist
+                </div>
+              </div>
+            </div>
+
+            <div class="companion-mini-card" onclick="openCompanionProfile('Marcus Vance', 'assets/male_escort.jpg')">
+              <div class="companion-avatar-wrapper">
+                <img src="assets/male_escort.jpg" class="companion-avatar-img" alt="Marcus Vance">
+                <div class="verified-badge-mini"><i data-lucide="check" style="width: 12px; height: 12px;"></i></div>
+              </div>
+              <div class="companion-info-mini">
+                <h4>Marcus Vance</h4>
+                <div class="companion-meta-row">
+                  <span class="rating-star"><i data-lucide="star" style="width: 12px; height: 12px; fill: #FBBF24;"></i> 5.0</span>
+                  <span>• Ex-Military</span>
+                  <span>• 0.6 miles</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--cyan-accent); font-weight: 600; margin-top: 0.2rem;">
+                  Car & Tactical Escort
+                </div>
+              </div>
+            </div>
+
+            <div class="companion-mini-card" onclick="openCompanionProfile('Aisha Patel', 'assets/female_escort.jpg')">
+              <div class="companion-avatar-wrapper">
+                <img src="assets/female_escort.jpg" class="companion-avatar-img" alt="Aisha Patel">
+                <div class="verified-badge-mini"><i data-lucide="check" style="width: 12px; height: 12px;"></i></div>
+              </div>
+              <div class="companion-info-mini">
+                <h4>Aisha Patel</h4>
+                <div class="companion-meta-row">
+                  <span class="rating-star"><i data-lucide="star" style="width: 12px; height: 12px; fill: #FBBF24;"></i> 4.95</span>
+                  <span>• Medical Training</span>
+                  <span>• 0.8 miles</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--emerald-accent); font-weight: 600; margin-top: 0.2rem;">
+                  Hospital & Elderly Companion
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 8 Companion Categories -->
+        <div class="category-section">
+          <div class="section-title-row">
+            <h4>Select Companion Category</h4>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Instant Booking Available</span>
+          </div>
+
+          <div class="categories-grid">
+            <div class="cat-card active" onclick="startBookingFlow('Walking Companion')">
+              <div class="cat-icon-box"><i data-lucide="footprints"></i></div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Walking Companion</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Night strolls & commute</div>
+            </div>
+
+            <div class="cat-card" onclick="startBookingFlow('Bike Companion')">
+              <div class="cat-icon-box"><i data-lucide="bike"></i></div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Bike Companion</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Cycling & transit</div>
+            </div>
+
+            <div class="cat-card" onclick="startBookingFlow('Car Companion')">
+              <div class="cat-icon-box"><i data-lucide="car"></i></div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Car Companion</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Vehicle escort & travel</div>
+            </div>
+
+            <div class="cat-card" onclick="startBookingFlow('Hospital Companion')">
+              <div class="cat-icon-box"><i data-lucide="heart-pulse"></i></div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Hospital Escort</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Medical visits & appointments</div>
+            </div>
+
+            <div class="cat-card" onclick="startBookingFlow('Shopping Companion')">
+              <div class="cat-icon-box"><i data-lucide="shopping-bag"></i></div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Shopping Escort</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Crowded venues & malls</div>
+            </div>
+
+            <div class="cat-card" onclick="startBookingFlow('Event Companion')">
+              <div class="cat-icon-box"><i data-lucide="ticket"></i></div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Event Companion</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Concerts & galas</div>
+            </div>
+
+            <div class="cat-card" onclick="startBookingFlow('Elderly Assistance')">
+              <div class="cat-icon-box"><i data-lucide="heart-handshake"></i></div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Elderly Assist</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Senior care & walks</div>
+            </div>
+
+            <div class="cat-card" onclick="startBookingFlow('Night Shift Escort')">
+              <div class="cat-icon-box"><i data-lucide="moon"></i></div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Night Shift Escort</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Late shift workplace walks</div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================
+           VIEW 4: COMPANION PROFILE
+           =================================================================== -->
+      <section id="viewCompanionProfile" class="app-view">
+        <button class="btn-secondary" style="margin-bottom: 1.5rem;" onclick="switchView('viewHome')">
+          <i data-lucide="arrow-left"></i> Back to Map
+        </button>
+
+        <div class="glass-card profile-hero-card">
+          <div class="profile-portrait-column">
+            <img src="assets/female_escort.jpg" id="profileDetailImg" class="profile-large-img" alt="Companion Profile">
+            
+            <div class="verification-badges-list">
+              <div class="v-badge-item">
+                <img src="assets/police_verified_badge.jpg" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;"> Police Background Verified
+              </div>
+              <div class="v-badge-item">
+                <i data-lucide="file-check" style="width: 16px; height: 16px;"></i> Government ID Verified
+              </div>
+              <div class="v-badge-item" style="background: rgba(6, 182, 212, 0.1); border-color: rgba(6, 182, 212, 0.3); color: var(--cyan-accent);">
+                <i data-lucide="award" style="width: 16px; height: 16px;"></i> CPR & First Aid Certified
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <h2 id="profileDetailName" style="font-size: 2rem;">Sarah Jenkins</h2>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Senior Safety Escort • 5+ Years Experience</p>
+              </div>
+              <div class="rating-star" style="font-size: 1.2rem; font-weight: 700;">
+                <i data-lucide="star" style="fill: #FBBF24;"></i> 4.9 / 5.0
+              </div>
+            </div>
+
+            <div class="stats-grid-mini">
+              <div class="stat-box">
+                <div class="stat-number">482</div>
+                <div class="stat-label">Bookings</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Safety Record</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-number">0.3 mi</div>
+                <div class="stat-label">Distance</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+              <h4 style="font-size: 0.95rem; margin-bottom: 0.4rem; color: var(--text-muted);">Spoken Languages</h4>
+              <div style="display: flex; gap: 0.5rem;">
+                <span style="background: rgba(255, 255, 255, 0.08); padding: 0.3rem 0.8rem; border-radius: 99px; font-size: 0.85rem;">English (Native)</span>
+                <span style="background: rgba(255, 255, 255, 0.08); padding: 0.3rem 0.8rem; border-radius: 99px; font-size: 0.85rem;">Spanish (Fluent)</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+              <h4 style="font-size: 0.95rem; margin-bottom: 0.4rem; color: var(--text-muted);">Bio & Background</h4>
+              <p style="color: var(--text-main); font-size: 0.95rem; line-height: 1.6;">
+                Former security officer and certified self-defense instructor. Dedicated to providing calm, discreet, and reliable personal security for late-night walks, event escorts, and travel assistance.
+              </p>
+            </div>
+
+            <button class="btn-primary" style="width: 100%;" onclick="startBookingFlow('Walking Companion')">
+              Book Companion Now
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 5: BOOKING FLOW
+           =================================================================== -->
+      <section id="viewBooking" class="app-view">
+        <div class="glass-card">
+          <h2 style="margin-bottom: 1.5rem;">Book Safety <span class="gradient-text">Companion</span></h2>
+
+          <!-- Booking Stepper Bar -->
+          <div class="booking-stepper">
+            <div class="step-indicator active" id="stepInd1">
+              <div class="step-number">1</div>
+              <span>Locations</span>
+            </div>
+            <div class="step-indicator" id="stepInd2">
+              <div class="step-number">2</div>
+              <span>Preferences</span>
+            </div>
+            <div class="step-indicator" id="stepInd3">
+              <div class="step-number">3</div>
+              <span>AI Risk & Pay</span>
+            </div>
+          </div>
+
+          <!-- Step 1: Pickup & Destination -->
+          <div id="bookingStep1">
+            <div class="form-group">
+              <label>Pickup Location</label>
+              <input type="text" class="form-input" id="inputPickup" value="Market St & 4th St, San Francisco, CA">
+            </div>
+
+            <div class="form-group">
+              <label>Destination Location</label>
+              <input type="text" class="form-input" id="inputDestination" value="Valencia St & 18th St, San Francisco, CA">
+            </div>
+
+            <div class="form-group">
+              <label>Service Category</label>
+              <select class="form-input" id="selectCategory">
+                <option value="Walking Companion">Walking Companion</option>
+                <option value="Bike Companion">Bike Companion</option>
+                <option value="Car Companion">Car Companion</option>
+                <option value="Hospital Companion">Hospital Companion</option>
+                <option value="Night Shift Escort">Night Shift Escort</option>
+              </select>
+            </div>
+
+            <button class="btn-primary" style="width: 100%; margin-top: 1.5rem;" onclick="goToBookingStep(2)">
+              Next: Set Preferences <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+
+          <!-- Step 2: Time & Preferences -->
+          <div id="bookingStep2" style="display: none;">
+            <div class="form-group">
+              <label>Duration / Escort Hours</label>
+              <input type="range" min="1" max="6" value="2" class="form-input" id="rangeHours" oninput="updatePriceEstimate()">
+              <div style="text-align: right; color: var(--cyan-accent); font-weight: 700; margin-top: 0.3rem;" id="valHoursText">2 Hours</div>
+            </div>
+
+            <div class="form-group">
+              <label>Gender Preference</label>
+              <select class="form-input">
+                <option value="Female Only">Female Companion</option>
+                <option value="Male Only">Male Companion</option>
+                <option value="No Preference">No Preference</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Language Preference</label>
+              <select class="form-input">
+                <option value="English">English</option>
+                <option value="Spanish">Spanish</option>
+                <option value="Mandarin">Mandarin</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+              <button class="btn-secondary" style="flex: 1;" onclick="goToBookingStep(1)">Back</button>
+              <button class="btn-primary" style="flex: 2;" onclick="goToBookingStep(3)">Calculate AI Risk & Price</button>
+            </div>
+          </div>
+
+          <!-- Step 3: AI Safety Score & Payment Confirmation -->
+          <div id="bookingStep3" style="display: none;">
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--emerald-accent); border-radius: 18px; padding: 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+              <div style="width: 50px; height: 50px; border-radius: 14px; background: var(--emerald-accent); display: flex; align-items: center; justify-content: center; color: #000;">
+                <i data-lucide="shield-check" style="width: 28px; height: 28px;"></i>
+              </div>
+              <div>
+                <h4 style="color: var(--emerald-accent);">AI Route Safety Score: 99/100</h4>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Route analyzed via 14,000+ real-time camera data points. High lighting, zero incidents reported.</p>
+              </div>
+            </div>
+
+            <div class="price-breakdown-box">
+              <div class="price-row">
+                <span>Base Companion Rate (2 Hours)</span>
+                <span>$40.00</span>
+              </div>
+              <div class="price-row">
+                <span>AI Live Protection & Dispatch Fee</span>
+                <span>$4.50</span>
+              </div>
+              <div class="price-row">
+                <span>Insurance & Police Network Sync</span>
+                <span>$2.50</span>
+              </div>
+              <div class="price-row total">
+                <span>Total Estimated Price</span>
+                <span style="color: var(--cyan-accent);" id="lblTotalPrice">$47.00</span>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+              <button class="btn-secondary" style="flex: 1;" onclick="goToBookingStep(2)">Back</button>
+              <button class="btn-primary" style="flex: 2;" onclick="confirmBookingAndLaunchTracking()">
+                Confirm & Dispatch Companion <i data-lucide="check-circle"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 6: LIVE TRACKING SCREEN
+           =================================================================== -->
+      <section id="viewLiveTracking" class="app-view">
+        <div class="tracking-grid">
+          <!-- Left: Live Map -->
+          <div class="glass-card tracking-map-container">
+            <div class="tracking-hud">
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Estimated Arrival</div>
+                <div class="eta-big" id="lblTrackingETA">4 Mins</div>
+              </div>
+              <div style="border-left: 1px solid var(--border-glass); padding-left: 1rem;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--emerald-accent);">Status: Escort En Route</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Safe Distance: 0.1 miles</div>
+              </div>
+            </div>
+
+            <div id="trackingMap"></div>
+          </div>
+
+          <!-- Right Panel: Controls, Chat, Audio Visualizer -->
+          <div class="live-controls-panel">
+            <!-- Active Companion Info Card -->
+            <div class="glass-card" style="padding: 1.25rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.8rem;">
+                  <img src="assets/female_escort.jpg" style="width: 48px; height: 48px; border-radius: 14px; object-fit: cover;" alt="Companion">
+                  <div>
+                    <h4 style="font-size: 1rem;">Sarah Jenkins</h4>
+                    <span style="font-size: 0.8rem; color: var(--emerald-accent);">● Assigned Companion</span>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem;">
+                  <button class="btn-secondary" style="padding: 0.5rem;" onclick="triggerFakeCall()">
+                    <i data-lucide="phone-call" style="width: 16px; height: 16px; color: var(--cyan-accent);"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Audio Recording Bar -->
+              <div class="audio-recorder-widget">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--rose-emergency); animation: logoPulse 1s infinite;"></div>
+                  <span style="font-size: 0.8rem; font-weight: 600;">AI Blackbox Audio</span>
+                </div>
+                <canvas id="audioWaveformCanvas"></canvas>
+              </div>
+            </div>
+
+            <!-- Live Chat Box -->
+            <div class="glass-card chat-box-container">
+              <div style="padding: 0.8rem 1rem; border-bottom: 1px solid var(--border-glass); display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-weight: 700; font-size: 0.9rem;">Encrypted Live Chat</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">End-to-End Encrypted</span>
+              </div>
+
+              <div class="chat-messages-area" id="chatMessagesBox">
+                <div class="chat-msg incoming">
+                  Hi Elena! I'm 2 blocks away near Market St. Walking towards your exact location now.
+                </div>
+                <div class="chat-msg outgoing">
+                  Great! I'm standing near the lighted entrance of the station.
+                </div>
+              </div>
+
+              <div class="chat-input-row">
+                <input type="text" class="form-input" id="chatInputText" placeholder="Type a message..." style="padding: 0.6rem 0.9rem; font-size: 0.85rem;" onkeypress="handleChatKeyPress(event)">
+                <button class="btn-primary" style="padding: 0.6rem 1rem;" onclick="sendChatMessage()">
+                  <i data-lucide="send" style="width: 14px; height: 14px;"></i>
+                </button>
+              </div>
+            </div>
+
+            <button class="btn-danger" style="width: 100%;" onclick="switchView('viewEmergency')">
+              <i data-lucide="zap"></i> EMERGENCY SOS TRIGGER
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 7: AI SAFETY CENTER
+           =================================================================== -->
+      <section id="viewAISafety" class="app-view">
+        <div style="margin-bottom: 1.5rem;">
+          <h2>AI Safety <span class="gradient-text-cyan">Intelligence Hub</span></h2>
+          <p style="color: var(--text-muted);">Real-time predictive risk modeling, local police feeds, and safe havens</p>
+        </div>
+
+        <div class="safety-dashboard-grid">
+          <div class="glass-card heatmap-container">
+            <div id="safetyMap"></div>
+          </div>
+
+          <div class="glass-card" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <h4>Live Safety Feeds</h4>
+
+            <div class="alerts-feed-list">
+              <div class="alert-feed-item">
+                <div style="font-weight: 700; margin-bottom: 0.2rem;">Streetlight Outage Alert</div>
+                <div style="color: var(--text-muted);">4th St & Mission St • AI rerouting escorts to 5th St avenue</div>
+              </div>
+
+              <div class="alert-feed-item high">
+                <div style="font-weight: 700; color: var(--rose-emergency); margin-bottom: 0.2rem;">High Crowd Density</div>
+                <div style="color: var(--text-muted);">Union Square • Police patrol deployed in sector 4</div>
+              </div>
+
+              <div class="alert-feed-item">
+                <div style="font-weight: 700; margin-bottom: 0.2rem;">Safe Haven Status</div>
+                <div style="color: var(--emerald-accent);">Central Police Station • 24/7 Gate Active (0.4 mi)</div>
+              </div>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-glass); padding-top: 1rem;">
+              <h5 style="margin-bottom: 0.5rem;">Nearby Emergency Services</h5>
+              <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.5rem;">
+                <div><strong style="color: #FFF;">SF General Hospital:</strong> 0.8 miles away (4 mins)</div>
+                <div><strong style="color: #FFF;">Central Police HQ:</strong> 0.4 miles away (2 mins)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 8: EMERGENCY DASHBOARD
+           =================================================================== -->
+      <section id="viewEmergency" class="app-view">
+        <div class="sos-mega-trigger-card">
+          <div>
+            <h2 style="font-size: 2.4rem; margin-bottom: 0.5rem;" class="gradient-text-red">EMERGENCY SOS CENTER</h2>
+            <p style="color: var(--text-muted); max-width: 550px;">
+              Pressing SOS immediately dispatches nearest armed police, broadcasts live video stream to security ops, and alerts your emergency contacts.
+            </p>
+          </div>
+
+          <button class="big-sos-button" onclick="triggerFullSOSAlert()">
+            SOS
+          </button>
+
+          <div style="display: flex; gap: 2rem; color: var(--text-muted); font-size: 0.85rem;">
+            <span><i data-lucide="video" style="width: 14px; height: 14px;"></i> Auto Video Record</span>
+            <span><i data-lucide="map-pin" style="width: 14px; height: 14px;"></i> Live GPS Stream</span>
+            <span><i data-lucide="phone" style="width: 14px; height: 14px;"></i> 911 Auto-Dial</span>
+          </div>
+        </div>
+
+        <div class="emergency-quick-grid">
+          <div class="emergency-tool-btn" onclick="triggerFakeCall()">
+            <div class="bio-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--cyan-accent);">
+              <i data-lucide="phone-incoming"></i>
+            </div>
+            <span style="font-weight: 700;">Fake Incoming Call</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Escape uncomfortable situations instantly</span>
+          </div>
+
+          <div class="emergency-tool-btn" onclick="toggleFlashlight()">
+            <div class="bio-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--amber-accent);">
+              <i data-lucide="flashlight"></i>
+            </div>
+            <span style="font-weight: 700;">Strobe Flashlight</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">High-intensity disorienting strobe</span>
+          </div>
+
+          <div class="emergency-tool-btn" onclick="triggerFullSOSAlert()">
+            <div class="bio-icon" style="background: rgba(244, 63, 94, 0.15); color: var(--rose-emergency);">
+              <i data-lucide="shield-alert"></i>
+            </div>
+            <span style="font-weight: 700;">Direct 911 Dispatch</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Priority line to emergency services</span>
+          </div>
+
+          <div class="emergency-tool-btn" onclick="alert('Live Stream broadcasted to 3 emergency contacts.')">
+            <div class="bio-icon" style="background: rgba(139, 92, 246, 0.15); color: var(--primary-violet);">
+              <i data-lucide="radio"></i>
+            </div>
+            <span style="font-weight: 700;">Broadcast Live Video</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Cloud backup audio/video record</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 9: COMPANION DASHBOARD (DRIVER MODE)
+           =================================================================== -->
+      <section id="viewCompanionDashboard" class="app-view">
+        <div class="online-toggle-bar">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--emerald-accent); box-shadow: 0 0 10px var(--emerald-accent);"></div>
+            <div>
+              <h4 style="margin: 0;">Online & Ready for Bookings</h4>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Current Shift: San Francisco Downtown Escort</span>
+            </div>
+          </div>
+
+          <button class="btn-secondary" style="padding: 0.5rem 1rem;" onclick="toggleCompanionOnlineStatus()">
+            Go Offline
+          </button>
+        </div>
+
+        <div class="companion-dash-grid">
+          <!-- Left: Shift & Earnings -->
+          <div class="glass-card">
+            <h4>Today's Earnings</h4>
+            <div style="font-size: 2.2rem; font-weight: 900; color: var(--emerald-accent); margin: 0.5rem 0;">$248.50</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">5 Escort Sessions Completed</div>
+
+            <div style="border-top: 1px solid var(--border-glass); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.8rem;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Acceptance Rate</span>
+                <span style="font-weight: 700;">99.2%</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Safety Rating</span>
+                <span style="font-weight: 700; color: #FBBF24;">4.98 ★</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Verification Status</span>
+                <span style="font-weight: 700; color: var(--emerald-accent);">Active & Police Verified</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Incoming Request simulation card -->
+          <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span style="background: var(--primary-violet); color: #FFF; padding: 0.3rem 0.8rem; border-radius: 99px; font-size: 0.8rem; font-weight: 700;">New Companion Request</span>
+                <span style="color: var(--rose-emergency); font-weight: 800; font-family: var(--font-heading);">14s Countdown</span>
+              </div>
+
+              <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem;">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" style="width: 60px; height: 60px; border-radius: 16px; object-fit: cover;" alt="Rider">
+                <div>
+                  <h3 style="font-size: 1.2rem;">Elena Rostova</h3>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">Walking Companion • 2.1 miles (8 min walk)</div>
+                </div>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 16px; padding: 1rem; font-size: 0.9rem;">
+                <div><strong>Pickup:</strong> Market St & 4th St</div>
+                <div style="margin-top: 0.3rem;"><strong>Destination:</strong> Valencia St & 18th St</div>
+                <div style="margin-top: 0.5rem; color: var(--cyan-accent); font-weight: 700;">Payout: $47.00</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+              <button class="btn-secondary" style="flex: 1;" onclick="alert('Request Declined')">Decline</button>
+              <button class="btn-primary" style="flex: 2;" onclick="acceptCompanionJob()">Accept Job & Navigate</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 10: ADMIN DASHBOARD
+           =================================================================== -->
+      <section id="viewAdmin" class="app-view">
+        <div style="margin-bottom: 1.5rem;">
+          <h2>SafeBuddy <span class="gradient-text">Command Center</span></h2>
+          <p style="color: var(--text-muted);">Global operations, companion fleet oversight, and AI fraud monitoring</p>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="admin-kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-title">Total Platform Users</div>
+            <div class="kpi-value gradient-text" id="adminUsersVal">128,490</div>
+            <div style="font-size: 0.8rem; color: var(--emerald-accent);">+18.4% this month</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-title">Active Companions On-Duty</div>
+            <div class="kpi-value gradient-text-cyan" id="adminCompanionsVal">3,420</div>
+            <div style="font-size: 0.8rem; color: var(--cyan-accent);">98.4% verification rate</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-title">Monthly Revenue</div>
+            <div class="kpi-value" style="color: #FFF;" id="adminRevVal">$1,428,900</div>
+            <div style="font-size: 0.8rem; color: var(--emerald-accent);">+24.1% ARR trajectory</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-title">AI Incident Prevention</div>
+            <div class="kpi-value gradient-text-red">99.98%</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">0 critical security lapses</div>
+          </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="admin-charts-grid">
+          <div class="glass-card chart-box">
+            <h4 style="margin-bottom: 1rem;">Revenue & Booking Velocity</h4>
+            <canvas id="adminRevenueChart"></canvas>
+          </div>
+
+          <div class="glass-card chart-box">
+            <h4 style="margin-bottom: 1rem;">Companion Category Distribution</h4>
+            <canvas id="adminCategoryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Active Bookings & Triage Table -->
+        <div class="glass-card">
+          <h4>Live Active Escort Sessions</h4>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>User</th>
+                <th>Companion</th>
+                <th>Category</th>
+                <th>AI Risk Index</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="adminBookingsTableBody">
+              <tr>
+                <td>#SB-9021</td>
+                <td>Elena Rostova</td>
+                <td>Sarah Jenkins</td>
+                <td>Walking Escort</td>
+                <td><span style="color: var(--emerald-accent); font-weight: 700;">LOW (99/100)</span></td>
+                <td><span style="background: rgba(16, 185, 129, 0.15); color: var(--emerald-accent); padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem;">Active En Route</span></td>
+              </tr>
+              <tr>
+                <td>#SB-9022</td>
+                <td>David Miller</td>
+                <td>Marcus Vance</td>
+                <td>Car Escort</td>
+                <td><span style="color: var(--emerald-accent); font-weight: 700;">LOW (96/100)</span></td>
+                <td><span style="background: rgba(6, 182, 212, 0.15); color: var(--cyan-accent); padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem;">Companion Assigned</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- ===================================================================
+       FACE ID BIOMETRIC SCAN OVERLAY / MODAL
+       =================================================================== -->
+  <div class="face-scan-overlay" id="faceScanOverlay">
+    <div class="scan-viewfinder">
+      <div class="scan-laser-line"></div>
+      <div class="face-mesh-dots">
+        <div class="mesh-dot"></div><div class="mesh-dot"></div><div class="mesh-dot"></div><div class="mesh-dot"></div><div class="mesh-dot"></div>
+        <div class="mesh-dot"></div><div class="mesh-dot"></div><div class="mesh-dot"></div><div class="mesh-dot"></div><div class="mesh-dot"></div>
+        <div class="mesh-dot"></div><div class="mesh-dot"></div><div class="mesh-dot"></div><div class="mesh-dot"></div><div class="mesh-dot"></div>
+      </div>
+    </div>
+    <div style="text-align: center;">
+      <h3 style="font-size: 1.5rem; margin-bottom: 0.4rem;">Scanning <span class="gradient-text-cyan">Biometrics...</span></h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Keep face centered in viewfinder</p>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       FAKE CALL OVERLAY MODAL
+       =================================================================== -->
+  <div class="fake-call-overlay" id="fakeCallOverlay">
+    <div class="caller-info">
+      <div style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.85rem; margin-bottom: 0.5rem;">SafeBuddy Security Call</div>
+      <h2>Police Emergency Dispatcher</h2>
+      <p style="color: var(--cyan-accent); font-weight: 600;">Incoming Encrypted Line...</p>
+    </div>
+
+    <div class="call-actions-row">
+      <button class="call-btn-circle call-btn-decline" onclick="closeFakeCall()">
+        <i data-lucide="phone-off"></i>
+      </button>
+      <button class="call-btn-circle call-btn-accept" onclick="answerFakeCall()">
+        <i data-lucide="phone"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       TECH ARCHITECTURE SPECIFICATIONS MODAL
+       =================================================================== -->
+  <div class="arch-modal-backdrop" id="archModal">
+    <div class="arch-modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+          <h3>System Architecture & Tech Stack</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Production-ready enterprise safety infrastructure</p>
+        </div>
+        <button class="btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="closeArchModal()">✕</button>
+      </div>
+
+      <div class="tech-tag-grid">
+        <div class="tech-tag-card">
+          <h5>FastAPI (Python)</h5>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Asynchronous API Gateway & High-Concurrency Dispatch</span>
+        </div>
+        <div class="tech-tag-card">
+          <h5>PostgreSQL + PostGIS</h5>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Spatial Queries & Encrypted Geo-location Storage</span>
+        </div>
+        <div class="tech-tag-card">
+          <h5>Redis Geo-Spatial</h5>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Sub-10ms Companion Pub/Sub & Radar Tracking</span>
+        </div>
+        <div class="tech-tag-card">
+          <h5>WebSockets Engine</h5>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Bi-directional Audio, Telemetry & SOS Stream</span>
+        </div>
+        <div class="tech-tag-card">
+          <h5>Firebase Auth</h5>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">OTP, MFA & OAuth Biometric Token Verification</span>
+        </div>
+        <div class="tech-tag-card">
+          <h5>AWS ECS & Docker</h5>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Auto-scaling Containerized Infrastructure</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Application Logic JS -->
+  <script src="app.js"></script>
+
+  <script>
+    // Initialize Lucide icons on load
+    lucide.createIcons();
+  </script>
+</body>
+</html>
